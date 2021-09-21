@@ -67,9 +67,14 @@ export class CellOutputElement extends Disposable {
 
 	public useDedicatedDOM: boolean = true;
 
+	private _height: number = -1;
 	get domOffsetHeight() {
 		if (this.useDedicatedDOM) {
-			return this.innerContainer.offsetHeight;
+			if (this._height === -1) {
+				return this.innerContainer.offsetHeight;
+			} else {
+				return this._height;
+			}
 		} else {
 			return 0;
 		}
@@ -264,7 +269,9 @@ export class CellOutputElement extends Disposable {
 		}
 
 		// let's use resize listener for them
-		const offsetHeight = this.renderResult?.initHeight !== undefined ? this.renderResult?.initHeight : Math.ceil(this.innerContainer.offsetHeight);
+		const offsetHeight = this.useDedicatedDOM && this.renderResult?.initHeight !== undefined ? this.renderResult?.initHeight : Math.ceil(this.innerContainer.offsetHeight);
+		this._height = offsetHeight;
+
 		const dimension = {
 			width: this.viewCell.layoutInfo.editorWidth,
 			height: offsetHeight
@@ -296,6 +303,7 @@ export class CellOutputElement extends Disposable {
 				};
 
 				this._validateFinalOutputHeight(true);
+				this._height = height;
 				this.viewCell.updateOutputHeight(currIndex, height, 'CellOutputElement#outputResize');
 				this._relayoutCell();
 			}

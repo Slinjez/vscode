@@ -77,9 +77,10 @@ class StreamRendererContrib extends Disposable implements IOutputRendererContrib
 		const contentNode = DOM.$('span.output-stream');
 		const lineLimit = this.configurationService.getValue<number>(TextOutputLineLimit) ?? 30;
 		truncatedArrayOfString(notebookUri, output.cellViewModel, Math.max(lineLimit, 6), contentNode, [text], disposables, linkDetector, this.openerService, this.themeService);
+		const initHeight = contentNode.offsetHeight;
 		container.appendChild(contentNode);
 
-		return { type: RenderOutputType.Mainframe, disposable: disposables };
+		return { type: RenderOutputType.Mainframe, disposable: disposables, initHeight };
 	}
 }
 
@@ -124,7 +125,7 @@ class JSErrorRendererContrib implements IOutputRendererContribution {
 		const linkDetector = this._instantiationService.createInstance(LinkDetector);
 
 		type ErrorLike = Partial<Error>;
-
+		const innerContainer = DOM.$('div');
 
 		let err: ErrorLike;
 		try {
@@ -138,17 +139,19 @@ class JSErrorRendererContrib implements IOutputRendererContribution {
 		const headerMessage = err.name && err.message ? `${err.name}: ${err.message}` : err.name || err.message;
 		if (headerMessage) {
 			header.innerText = headerMessage;
-			container.appendChild(header);
+			innerContainer.appendChild(header);
 		}
 		const stack = document.createElement('pre');
 		stack.classList.add('traceback');
 		if (err.stack) {
 			stack.appendChild(handleANSIOutput(err.stack, linkDetector, this._themeService, undefined));
 		}
-		container.appendChild(stack);
-		container.classList.add('error');
+		innerContainer.appendChild(stack);
+		innerContainer.classList.add('error');
+		const initHeight = innerContainer.offsetHeight;
+		container.appendChild(innerContainer);
 
-		return { type: RenderOutputType.Mainframe };
+		return { type: RenderOutputType.Mainframe, initHeight };
 	}
 }
 
@@ -179,9 +182,10 @@ class PlainTextRendererContrib extends Disposable implements IOutputRendererCont
 		const contentNode = DOM.$('.output-plaintext');
 		const lineLimit = this.configurationService.getValue<number>(TextOutputLineLimit) ?? 30;
 		truncatedArrayOfString(notebookUri, output.cellViewModel, Math.max(lineLimit, 6), contentNode, [str], disposables, linkDetector, this.openerService, this.themeService);
+		const initHeight = contentNode.offsetHeight;
 		container.appendChild(contentNode);
 
-		return { type: RenderOutputType.Mainframe, supportAppend: true, disposable: disposables };
+		return { type: RenderOutputType.Mainframe, supportAppend: true, disposable: disposables, initHeight };
 	}
 }
 
